@@ -33,7 +33,7 @@ class Parser:
             if self.index_token_actual < len(self.tokens):
                 self.token_actual = self.tokens[self.index_token_actual]
         elif self.token_actual and self.token_actual.tipo != None:
-            mensaje_de_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, se esperaba {token_type} en la línea {self.token_actual.lineno if self.token_actual else 'None'}, posición {self.token_actual.lexpos if self.token_actual else 'None'}"
+            mensaje_de_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, se esperaba {token_type} en la línea {self.token_actual.linea if self.token_actual else 'None'}, posición {self.token_actual.col if self.token_actual else 'None'}"
             self.errores.append(mensaje_de_error)
             self.sincronizar()
 
@@ -164,7 +164,7 @@ class Parser:
         elif self.token_actual.tipo == "IDENTIFICADOR":
             return self.asignacion_o_inremento_decremento()
         else:
-            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, se encontró en la línea {self.token_actual.lineno if self.token_actual else 'None'}, posición {self.token_actual.lexpos if self.token_actual else 'None'}"
+            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, se encontró en la línea {self.token_actual.linea if self.token_actual else 'None'}, posición {self.token_actual.col if self.token_actual else 'None'}"
             self.errores.append(mensaje_error)
             self.sincronizar()
             return
@@ -202,7 +202,7 @@ class Parser:
                 children=[Node("Identificador", valor=identifier_token)],
             )
         else:
-            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, esperado en la línea {self.token_actual.lineno if self.token_actual else 'None'}, posición {self.token_actual.lexpos if self.token_actual else 'None'}"
+            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, esperado en la línea {self.token_actual.linea if self.token_actual else 'None'}, posición {self.token_actual.col if self.token_actual else 'None'}"
             self.errores.append(mensaje_error)
             self.sincronizar()
             return
@@ -381,7 +381,7 @@ class Parser:
             self.match("IDENTIFICADOR")
             return Node(name="Identificador", valor=identifier)
         else:
-            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, en la línea {self.token_actual.lineno if self.token_actual else 'None'}, posición {self.token_actual.lexpos if self.token_actual else 'None'}"
+            mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, en la línea {self.token_actual.linea if self.token_actual else 'None'}, posición {self.token_actual.col if self.token_actual else 'None'}"
             self.errores.append(mensaje_error)
             self.sincronizar()
             return

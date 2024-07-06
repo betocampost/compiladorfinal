@@ -108,6 +108,9 @@ class IDE:
                 parser = Parser(tokens)
                 raiz = parser.parse()
                 self.tabs.syntactic_analysis_tab.set_tree(raiz)
+
+                error_str = "\n".join([str(error) for error in parser.errores])
+                self.tabs.syntactic_analysis_errors_tab.add_text(error_str)
         else:
             print("No file to run")
 
