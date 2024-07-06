@@ -3,7 +3,7 @@ from tkinter import filedialog
 from components.menu import MenuBar
 from components.editor import Editor
 from components.tabs import TabManager
-from lexer import get_lexical_analysis
+from lexer import lexer
 
 
 class IDE:
@@ -11,7 +11,7 @@ class IDE:
 
     def __init__(self, main):
         self.root = main
-        self.root.title("IDE")
+        self.root.title("My IDE")
         self.root.geometry("1024x768")
 
         self.menu_bar = MenuBar(
@@ -70,19 +70,18 @@ class IDE:
         """Open a folder"""
         folder_path = filedialog.askdirectory()
         if folder_path:
-            return
+            print(f"Opened folder: {folder_path}")
 
     def run_code(self):
         """Run the code"""
         if self.current_file:
-            tokens, errors = get_lexical_analysis(self.current_file)
+            tokens, errors = lexer(self.current_file)
+
             token_str = "\n".join([str(token) for token in tokens])
             self.tabs.lexycal_analysis_tab.add_text(token_str)
-            self.tabs.lexycal_analysis_tab.content.update_idletasks()
 
             error_str = "\n".join([str(error) for error in errors])
             self.tabs.lexycal_analysis_errors_tab.add_text(error_str)
-            self.tabs.lexycal_analysis_errors_tab.content.update_idletasks()
 
         else:
             print("No file to run")

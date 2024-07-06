@@ -1,320 +1,307 @@
-"""
-    Python file that contains the function get_tokens(file: Path)
-    that extracts tokens from a file and returns a list of tokens along
-    with their errors and it's positions.
-"""
-
 from pathlib import Path
 import re
 
 
 class Token:
-    def __init__(self, type, value, lineno, lexpos):
-        self.type = type
-        self.value = value
-        self.lineno = lineno
-        self.lexpos = lexpos
+
+    def __init__(self, tipo, valor, linea, col):
+        self.tipo = tipo
+        self.valor = valor
+        self.linea = linea
+        self.col = col
 
     def __repr__(self):
-        return f"({self.type}, {self.value}, {self.lineno}, {self.lexpos})"
+        return f"Token({self.tipo}, {self.valor}, {self.linea}, {self.col})"
 
 
-def get_lexical_analysis(file: Path):
+def lexer(file: Path):
     with open(file, "r", encoding="utf-8") as f:
         tokens = []
-        errors = []
-        is_block_comment = False
-        is_block_starting = []
-        identifier_pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-        reserved_words_pattern = re.compile(
+        errores = []
+        com_multilinea = False
+        empieza_bloque = []
+        identificador = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+        palabras_reservadas = re.compile(
             r"\b(if|else|do|while|switch|case|double|main|cin|cout|int|float)\b"
         )
-        number_pattern = re.compile(r"\b\d+\b")
-        symbol_pattern = re.compile(r"\(|\)|,|{|}|;")
-        assignment_pattern = re.compile(r"=")
-        logical_op_pattern = re.compile(r"\b(?:and|or)\b")
-        aritmethic_op_pattern = re.compile(r"\+|-|\*|/|%|\^")
-        relational_op_pattern = re.compile(r"<|>|!")
+        numeros = re.compile(r"\b\d+\b")
+        simbolos = re.compile(r"\(|\)|,|{|}|;")
+        asignacion = re.compile(r"=")
+        operador_logico = re.compile(r"\b(?:and|or)\b")
+        operador_aritmetico = re.compile(r"\+|-|\*|/|%|\^")
+        operador_relacional = re.compile(r"<|>|!")
 
-        for lineno, line in enumerate(f.readlines(), start=1):
-            skip_col = 0
-            for index_string, char in enumerate(line):
-                lexpos = index_string + 1
-                if skip_col == 0:
-                    if char == " ":
+        for numero_linea, linea in enumerate(f.readlines(), start=1):
+            omitir = 0
+            for i, caracter in enumerate(linea):
+                col = i + 1
+                if omitir == 0:
+                    if caracter == " ":
                         continue
-                    if char == "\t":
+                    if caracter == "\t":
                         continue
-                    if char == "\n":
-                        continue
-
-                    if re.match(symbol_pattern, char) and not is_block_comment:
-                        identify_symbol(char, tokens, lineno, lexpos)
+                    if caracter == "\n":
                         continue
 
-                    if re.match(assignment_pattern, char) and not is_block_comment:
-                        if (index_string + 1 < len(line)) and line[
-                            index_string + 1
-                        ] == "=":
-                            tokens.append(Token("EQ", "==", lineno, lexpos))
-                            skip_col += 1
+                    if re.match(simbolos, caracter) and not com_multilinea:
+                        id_simbolos(caracter, tokens, numero_linea, col)
+                        continue
+
+                    if re.match(asignacion, caracter) and not com_multilinea:
+                        if (i + 1 < len(linea)) and linea[i + 1] == "=":
+                            tokens.append(Token("IGUAL", "==", numero_linea, col))
+                            omitir += 1
                             continue
-                        tokens.append(Token("ASSIGN", char, lineno, lexpos))
+                        tokens.append(Token("ASIGNACION", caracter, numero_linea, col))
                         continue
 
-                    if re.match(aritmethic_op_pattern, char) and not is_block_comment:
-                        if char == "+" and line[index_string + 1] == "+":
+                    if re.match(operador_aritmetico, caracter) and not com_multilinea:
+                        if caracter == "+" and linea[i + 1] == "+":
                             tokens.append(
-                                Token("INCREMENT_OPERATOR", "++", lineno, lexpos)
+                                Token("OPERADOR_INCREMENTO", "++", numero_linea, col)
                             )
-                            skip_col += 1
+                            omitir += 1
                             continue
-                        if char == "-" and line[index_string + 1] == "-":
+                        if caracter == "-" and linea[i + 1] == "-":
                             tokens.append(
-                                Token("DECREMENT_OPERATOR", "--", lineno, lexpos)
+                                Token("OPERADOR_DECREMENTO", "--", numero_linea, col)
                             )
-                            skip_col += 1
+                            omitir += 1
                             continue
                         if (
-                            char == "/"
-                            and (index_string + 1 < len(line))
-                            and (line[index_string + 1] == "*")
+                            caracter == "/"
+                            and (i + 1 < len(linea))
+                            and (linea[i + 1] == "*")
                         ):
-                            is_block_starting = [lineno, lexpos]
-                            is_block_comment = True
+                            empieza_bloque = [numero_linea, col]
+                            com_multilinea = True
                             break
                         if (
-                            char == "/"
-                            and (index_string + 1 < len(line))
-                            and line[index_string + 1] == "/"
+                            caracter == "/"
+                            and (i + 1 < len(linea))
+                            and linea[i + 1] == "/"
                         ):
                             break
-                        identify_aritmethic_operator(char, tokens, lineno, lexpos)
+                        id_aritmeticos(caracter, tokens, numero_linea, col)
                         continue
 
-                    if re.match(relational_op_pattern, char) and not is_block_comment:
-                        if (index_string + 1 < len(line)) and line[
-                            index_string + 1
-                        ] == "=":
-                            identify_relational_operator(
-                                char + "=", tokens, lineno, lexpos
-                            )
-                            skip_col += 1
+                    if re.match(operador_relacional, caracter) and not com_multilinea:
+                        if (i + 1 < len(linea)) and linea[i + 1] == "=":
+                            id_relacioneales(caracter + "=", tokens, numero_linea, col)
+                            omitir += 1
                             continue
-                        identify_relational_operator(char, tokens, lineno, lexpos)
+                        id_relacioneales(caracter, tokens, numero_linea, col)
                         continue
 
-                    if re.match(identifier_pattern, char) and not is_block_comment:
-                        identifier = char
-                        rest_of_string = line[index_string + 1 :]
+                    if re.match(identificador, caracter) and not com_multilinea:
+                        identifier = caracter
+                        resto_cadena = linea[i + 1 :]
                         while True:
-                            for c in rest_of_string:
-                                if re.match(identifier_pattern, (identifier + c)):
+                            for c in resto_cadena:
+                                if re.match(identificador, c):
                                     identifier += c
-                                    skip_col += 1
+                                    omitir += 1
                                 else:
                                     break
                             break
 
-                        if re.match(logical_op_pattern, identifier):
-                            identify_logical_operator(
-                                identifier, tokens, lineno, lexpos
-                            )
+                        if re.match(operador_logico, identifier):
+                            id_logicos(identifier, tokens, numero_linea, col)
                             continue
 
-                        if re.match(reserved_words_pattern, identifier):
-                            identify_reserved_words(identifier, tokens, lineno, lexpos)
+                        if re.match(palabras_reservadas, identifier):
+                            id_reservadas(identifier, tokens, numero_linea, col)
                             continue
 
-                        tokens.append(Token("IDENTIFIER", identifier, lineno, lexpos))
+                        tokens.append(
+                            Token("IDENTIFICADOR", identifier, numero_linea, col)
+                        )
                         continue
 
-                    if re.match(number_pattern, char) and not is_block_comment:
-                        number = char
-                        rest_of_string = line[index_string + 1 :]
-                        is_float_recognized = False
+                    if re.match(numeros, caracter) and not com_multilinea:
+                        numero = caracter
+                        resto_cadena = linea[i + 1 :]
+                        es_flotante = False
                         while True:
-                            for i_c, c in enumerate(rest_of_string):
-                                if re.match(number_pattern, c):
-                                    number += c
-                                    skip_col += 1
+                            for i_c, c in enumerate(resto_cadena):
+                                if re.match(numeros, c):
+                                    numero += c
+                                    omitir += 1
                                 elif (
                                     c == "."
-                                    and re.match(
-                                        number_pattern, rest_of_string[i_c + 1]
-                                    )
-                                    and not is_float_recognized
+                                    and re.match(numeros, resto_cadena[i_c + 1])
+                                    and not es_flotante
                                 ):
-                                    is_float_recognized = True
-                                    number += c
-                                    skip_col += 1
+                                    es_flotante = True
+                                    numero += c
+                                    omitir += 1
                                 else:
                                     break
                             break
-                        if is_float_recognized:
-                            if tokens and tokens[-1].value == "-":
+                        if es_flotante:
+                            if tokens and tokens[-1].valor == "-":
                                 if (
                                     len(tokens) >= 2
-                                    and tokens[-2].value == "("
-                                    or tokens[-2].type
+                                    and tokens[-2].valor == "("
+                                    or tokens[-2].tipo
                                     not in (
-                                        "INTEGER_NUMBER",
-                                        "REAL_NUMBER",
-                                        "NEGATIVE_INTEGER_NUMBER",
-                                        "NEGATIVE_REAL_NUMBER",
+                                        "ENTERO",
+                                        "REAL",
+                                        "ENTERO NEGATIVO",
+                                        "REAL NEGATIVO",
                                     )
                                 ):
                                     tokens.pop()
-                                    number = "-" + number
+                                    numero = "-" + numero
                                     tokens.append(
                                         Token(
-                                            "NEGATIVE_REAL_NUMBER",
-                                            number,
-                                            lineno,
-                                            lexpos,
+                                            "REAL NEGATIVO",
+                                            numero,
+                                            numero_linea,
+                                            col,
                                         )
                                     )
                                     continue
-                            tokens.append(Token("REAL_NUMBER", number, lineno, lexpos))
+                            tokens.append(Token("REAL", numero, numero_linea, col))
                             continue
-                        if tokens and tokens[-1].value == "-":
-                            if tokens and tokens[-1].value == "-":
+                        if tokens and tokens[-1].valor == "-":
+                            if tokens and tokens[-1].valor == "-":
                                 if (
                                     len(tokens) >= 2
-                                    and tokens[-2].value == "("
-                                    or tokens[-2].type
+                                    and tokens[-2].valor == "("
+                                    or tokens[-2].tipo
                                     not in (
-                                        "INTEGER_NUMBER",
-                                        "REAL_NUMBER",
-                                        "NEGATIVE_INTEGER_NUMBER",
-                                        "NEGATIVE_REAL_NUMBER",
+                                        "ENTERO",
+                                        "REAL",
+                                        "ENTERO NEGATIVO",
+                                        "REAL NEGATIVO",
                                     )
                                 ):
                                     tokens.pop()
-                                    number = "-" + number
+                                    numero = "-" + numero
                                     tokens.append(
                                         Token(
-                                            "NEGATIVE_INTEGER_NUMBER",
-                                            number,
-                                            lineno,
-                                            lexpos,
+                                            "ENTERO NEGATIVO",
+                                            numero,
+                                            numero_linea,
+                                            col,
                                         )
                                     )
                                     continue
-                        tokens.append(Token("INTEGER_NUMBER", number, lineno, lexpos))
+                        tokens.append(Token("ENTERO", numero, numero_linea, col))
                         continue
 
-                    if not is_block_comment:
-                        errors.append(
+                    if not com_multilinea:
+                        errores.append(
                             Token(
-                                "ERROR",
-                                f"Invalid character => {char}",
-                                lineno,
-                                lexpos,
+                                "Error",
+                                f"Caracter Invalido => {caracter}",
+                                numero_linea,
+                                col,
                             )
                         )
 
-                    if is_block_comment:
+                    if com_multilinea:
                         if (
-                            char == "*"
-                            and (index_string + 1 < len(line))
-                            and line[index_string + 1] == "/"
+                            caracter == "*"
+                            and (i + 1 < len(linea))
+                            and linea[i + 1] == "/"
                         ):
-                            is_block_comment = False
-                            skip_col += 1
+                            com_multilinea = False
+                            omitir += 1
                 else:
-                    skip_col -= 1
+                    omitir -= 1
 
-        if is_block_comment:
-            errors.append(
+        if com_multilinea:
+            errores.append(
                 Token(
-                    "ERROR",
+                    "Error",
                     "Block comment not closed",
-                    is_block_starting[0],
-                    is_block_starting[1],
+                    empieza_bloque[0],
+                    empieza_bloque[1],
                 )
             )
 
-        return tokens, errors
+        return tokens, errores
 
 
-def identify_symbol(char: str, tokens: list, lineno: int, lexpos: int):
+def id_simbolos(char: str, tokens: list, lineno: int, col: int):
     if char == "(":
-        tokens.append(Token("LPAREN", char, lineno, lexpos))
+        tokens.append(Token("LPAREN", char, lineno, col))
     if char == ")":
-        tokens.append(Token("RPAREN", char, lineno, lexpos))
+        tokens.append(Token("RPAREN", char, lineno, col))
     if char == ",":
-        tokens.append(Token("COMMA", char, lineno, lexpos))
+        tokens.append(Token("COMA", char, lineno, col))
     if char == "{":
-        tokens.append(Token("LBRACE", char, lineno, lexpos))
+        tokens.append(Token("LLLAVE", char, lineno, col))
     if char == "}":
-        tokens.append(Token("RBRACE", char, lineno, lexpos))
+        tokens.append(Token("RLLAVE", char, lineno, col))
     if char == ";":
-        tokens.append(Token("SEMICOLON", char, lineno, lexpos))
+        tokens.append(Token("SEMICOLON", char, lineno, col))
 
 
-def identify_aritmethic_operator(char: str, tokens: list, lineno: int, lexpos: int):
+def id_aritmeticos(char: str, tokens: list, lineno: int, col: int):
     if char == "+":
-        tokens.append(Token("PLUS", char, lineno, lexpos))
+        tokens.append(Token("SUMA", char, lineno, col))
     if char == "-":
-        tokens.append(Token("MINUS", char, lineno, lexpos))
+        tokens.append(Token("RESTA", char, lineno, col))
     if char == "*":
-        tokens.append(Token("TIMES", char, lineno, lexpos))
+        tokens.append(Token("MULT", char, lineno, col))
     if char == "/":
-        tokens.append(Token("DIVIDE", char, lineno, lexpos))
+        tokens.append(Token("DIVISION", char, lineno, col))
     if char == "%":
-        tokens.append(Token("MOD", char, lineno, lexpos))
+        tokens.append(Token("MODULO", char, lineno, col))
     if char == "^":
-        tokens.append(Token("POW", char, lineno, lexpos))
+        tokens.append(Token("POTENCIA", char, lineno, col))
 
 
-def identify_relational_operator(char: str, tokens: list, lineno: int, lexpos: int):
+def id_relacioneales(char: str, tokens: list, lineno: int, col: int):
     if char == "<":
-        tokens.append(Token("LT", char, lineno, lexpos))
+        tokens.append(Token("MENOR", char, lineno, col))
     if char == ">":
-        tokens.append(Token("GT", char, lineno, lexpos))
+        tokens.append(Token("MAYOR", char, lineno, col))
     if char == "!":
-        tokens.append(Token("NOT", char, lineno, lexpos))
+        tokens.append(Token("NEGACION", char, lineno, col))
     if char == "<=":
-        tokens.append(Token("LE", char, lineno, lexpos))
+        tokens.append(Token("MENOR_IGUAL", char, lineno, col))
     if char == ">=":
-        tokens.append(Token("GE", char, lineno, lexpos))
+        tokens.append(Token("MAYOR_IGUAL", char, lineno, col))
     if char == "!=":
-        tokens.append(Token("NE", char, lineno, lexpos))
+        tokens.append(Token("DIFERENTE", char, lineno, col))
 
 
-def identify_logical_operator(char: str, tokens: list, lineno: int, lexpos: int):
+def id_logicos(char: str, tokens: list, lineno: int, col: int):
     if char == "and":
-        tokens.append(Token("AND", char, lineno, lexpos))
+        tokens.append(Token("AND", char, lineno, col))
     if char == "or":
-        tokens.append(Token("OR", char, lineno, lexpos))
+        tokens.append(Token("OR", char, lineno, col))
 
 
-def identify_reserved_words(char: str, tokens: list, lineno: int, lexpos: int):
+def id_reservadas(char: str, tokens: list, lineno: int, col: int):
     if char == "if":
-        tokens.append(Token("IF", char, lineno, lexpos))
+        tokens.append(Token("IF", char, lineno, col))
     if char == "else":
-        tokens.append(Token("ELSE", char, lineno, lexpos))
+        tokens.append(Token("ELSE", char, lineno, col))
     if char == "do":
-        tokens.append(Token("DO", char, lineno, lexpos))
+        tokens.append(Token("DO", char, lineno, col))
     if char == "while":
-        tokens.append(Token("WHILE", char, lineno, lexpos))
+        tokens.append(Token("WHILE", char, lineno, col))
     if char == "switch":
-        tokens.append(Token("SWITCH", char, lineno, lexpos))
+        tokens.append(Token("SWITCH", char, lineno, col))
     if char == "case":
-        tokens.append(Token("CASE", char, lineno, lexpos))
+        tokens.append(Token("CASE", char, lineno, col))
     if char == "double":
-        tokens.append(Token("DOUBLE", char, lineno, lexpos))
+        tokens.append(Token("DOUBLE", char, lineno, col))
     if char == "main":
-        tokens.append(Token("MAIN", char, lineno, lexpos))
+        tokens.append(Token("MAIN", char, lineno, col))
     if char == "cin":
-        tokens.append(Token("CIN", char, lineno, lexpos))
+        tokens.append(Token("CIN", char, lineno, col))
     if char == "cout":
-        tokens.append(Token("COUT", char, lineno, lexpos))
+        tokens.append(Token("COUT", char, lineno, col))
     if char == "int":
-        tokens.append(Token("INT", char, lineno, lexpos))
+        tokens.append(Token("INT", char, lineno, col))
     if char == "float":
-        tokens.append(Token("FLOAT", char, lineno, lexpos))
+        tokens.append(Token("FLOAT", char, lineno, col))
 
 
 if __name__ == "__main__":
@@ -330,7 +317,7 @@ if __name__ == "__main__":
         if not file_path.exists():
             print("File does not exist")
         else:
-            tkns, errs = get_lexical_analysis(file_path)
+            tkns, errs = lexer(file_path)
 
             for token in tkns:
                 print(f"{token}")
