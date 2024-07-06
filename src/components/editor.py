@@ -1,4 +1,4 @@
-"""Editor"""
+"""Editor component for the IDE"""
 
 import tkinter as tk
 from tkinter import scrolledtext
@@ -9,7 +9,9 @@ class Editor:
 
     def __init__(self, root):
         self.frame = tk.Frame(root)
-        self.frame.pack(fill=tk.BOTH, expand=True)
+        self.frame.place(
+            relx=0, rely=0, relwidth=0.6, relheight=0.7
+        )  # Adjust the size and placement
 
         self.text_editor = scrolledtext.ScrolledText(self.frame, wrap=tk.WORD)
         self.text_editor.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)

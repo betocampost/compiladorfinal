@@ -1,3 +1,5 @@
+"""Lexer file for the compiler"""
+
 from pathlib import Path
 import re
 
@@ -225,83 +227,83 @@ def lexer(file: Path):
         return tokens, errores
 
 
-def id_simbolos(char: str, tokens: list, lineno: int, col: int):
+def id_simbolos(char: str, tokens: list, linea: int, col: int):
     if char == "(":
-        tokens.append(Token("LPAREN", char, lineno, col))
+        tokens.append(Token("LPAREN", char, linea, col))
     if char == ")":
-        tokens.append(Token("RPAREN", char, lineno, col))
+        tokens.append(Token("RPAREN", char, linea, col))
     if char == ",":
-        tokens.append(Token("COMA", char, lineno, col))
+        tokens.append(Token("COMA", char, linea, col))
     if char == "{":
-        tokens.append(Token("LLLAVE", char, lineno, col))
+        tokens.append(Token("LLLAVE", char, linea, col))
     if char == "}":
-        tokens.append(Token("RLLAVE", char, lineno, col))
+        tokens.append(Token("RLLAVE", char, linea, col))
     if char == ";":
-        tokens.append(Token("SEMICOLON", char, lineno, col))
+        tokens.append(Token("SEMICOLON", char, linea, col))
 
 
-def id_aritmeticos(char: str, tokens: list, lineno: int, col: int):
+def id_aritmeticos(char: str, tokens: list, linea: int, col: int):
     if char == "+":
-        tokens.append(Token("SUMA", char, lineno, col))
+        tokens.append(Token("SUMA", char, linea, col))
     if char == "-":
-        tokens.append(Token("RESTA", char, lineno, col))
+        tokens.append(Token("RESTA", char, linea, col))
     if char == "*":
-        tokens.append(Token("MULT", char, lineno, col))
+        tokens.append(Token("MULT", char, linea, col))
     if char == "/":
-        tokens.append(Token("DIVISION", char, lineno, col))
+        tokens.append(Token("DIVISION", char, linea, col))
     if char == "%":
-        tokens.append(Token("MODULO", char, lineno, col))
+        tokens.append(Token("MODULO", char, linea, col))
     if char == "^":
-        tokens.append(Token("POTENCIA", char, lineno, col))
+        tokens.append(Token("POTENCIA", char, linea, col))
 
 
-def id_relacioneales(char: str, tokens: list, lineno: int, col: int):
+def id_relacioneales(char: str, tokens: list, linea: int, col: int):
     if char == "<":
-        tokens.append(Token("MENOR", char, lineno, col))
+        tokens.append(Token("MENOR", char, linea, col))
     if char == ">":
-        tokens.append(Token("MAYOR", char, lineno, col))
+        tokens.append(Token("MAYOR", char, linea, col))
     if char == "!":
-        tokens.append(Token("NEGACION", char, lineno, col))
+        tokens.append(Token("NEGACION", char, linea, col))
     if char == "<=":
-        tokens.append(Token("MENOR_IGUAL", char, lineno, col))
+        tokens.append(Token("MENOR_IGUAL", char, linea, col))
     if char == ">=":
-        tokens.append(Token("MAYOR_IGUAL", char, lineno, col))
+        tokens.append(Token("MAYOR_IGUAL", char, linea, col))
     if char == "!=":
-        tokens.append(Token("DIFERENTE", char, lineno, col))
+        tokens.append(Token("DIFERENTE", char, linea, col))
 
 
-def id_logicos(char: str, tokens: list, lineno: int, col: int):
+def id_logicos(char: str, tokens: list, linea: int, col: int):
     if char == "and":
-        tokens.append(Token("AND", char, lineno, col))
+        tokens.append(Token("AND", char, linea, col))
     if char == "or":
-        tokens.append(Token("OR", char, lineno, col))
+        tokens.append(Token("OR", char, linea, col))
 
 
-def id_reservadas(char: str, tokens: list, lineno: int, col: int):
+def id_reservadas(char: str, tokens: list, linea: int, col: int):
     if char == "if":
-        tokens.append(Token("IF", char, lineno, col))
+        tokens.append(Token("IF", char, linea, col))
     if char == "else":
-        tokens.append(Token("ELSE", char, lineno, col))
+        tokens.append(Token("ELSE", char, linea, col))
     if char == "do":
-        tokens.append(Token("DO", char, lineno, col))
+        tokens.append(Token("DO", char, linea, col))
     if char == "while":
-        tokens.append(Token("WHILE", char, lineno, col))
+        tokens.append(Token("WHILE", char, linea, col))
     if char == "switch":
-        tokens.append(Token("SWITCH", char, lineno, col))
+        tokens.append(Token("SWITCH", char, linea, col))
     if char == "case":
-        tokens.append(Token("CASE", char, lineno, col))
+        tokens.append(Token("CASE", char, linea, col))
     if char == "double":
-        tokens.append(Token("DOUBLE", char, lineno, col))
+        tokens.append(Token("DOUBLE", char, linea, col))
     if char == "main":
-        tokens.append(Token("MAIN", char, lineno, col))
+        tokens.append(Token("MAIN", char, linea, col))
     if char == "cin":
-        tokens.append(Token("CIN", char, lineno, col))
+        tokens.append(Token("CIN", char, linea, col))
     if char == "cout":
-        tokens.append(Token("COUT", char, lineno, col))
+        tokens.append(Token("COUT", char, linea, col))
     if char == "int":
-        tokens.append(Token("INT", char, lineno, col))
+        tokens.append(Token("INT", char, linea, col))
     if char == "float":
-        tokens.append(Token("FLOAT", char, lineno, col))
+        tokens.append(Token("FLOAT", char, linea, col))
 
 
 if __name__ == "__main__":

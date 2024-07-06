@@ -1,9 +1,14 @@
+"""
+Main file for the IDE
+"""
+
 import tkinter as tk
 from tkinter import filedialog
 from components.menu import MenuBar
 from components.editor import Editor
 from components.tabs import TabManager
 from lexer import lexer
+from parser_ import Parser
 
 
 class IDE:
@@ -11,7 +16,7 @@ class IDE:
 
     def __init__(self, main):
         self.root = main
-        self.root.title("My IDE")
+        self.root.title("IDE")
         self.root.geometry("1024x768")
 
         self.menu_bar = MenuBar(
@@ -24,10 +29,14 @@ class IDE:
             run_code=self.run_code,
         )
 
-        self.editor = Editor(self.root)
+        # Create a main frame to hold the editor and the tabs
+        self.main_frame = tk.Frame(self.root)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+        self.editor = Editor(self.main_frame)
         self.current_file = None
 
-        self.tabs = TabManager(self.root)
+        self.tabs = TabManager(self.main_frame)
 
     def new_file(self):
         """Create a new file"""
@@ -74,6 +83,18 @@ class IDE:
 
     def run_code(self):
         """Run the code"""
+        self.tabs.lexycal_analysis_tab.clear_text()
+        self.tabs.lexycal_analysis_errors_tab.clear_text()
+        self.tabs.syntactic_analysis_tab.clear_tree()
+        self.tabs.syntactic_analysis_errors_tab.clear_text()
+        self.tabs.semantic_analysis_tab.clear_text()
+        self.tabs.semantic_analysis_errors_tab.clear_text()
+        self.tabs.hash_table_analysis_tab.clear_text()
+        self.tabs.hash_table_errors_tab.clear_text()
+        self.tabs.intermediate_code_analysis_tab.clear_text()
+        self.tabs.intermediate_code_errors_tab.clear_text()
+        self.tabs.results_tab.clear_text()
+
         if self.current_file:
             tokens, errors = lexer(self.current_file)
 
@@ -83,6 +104,10 @@ class IDE:
             error_str = "\n".join([str(error) for error in errors])
             self.tabs.lexycal_analysis_errors_tab.add_text(error_str)
 
+            if not errors:
+                parser = Parser(tokens)
+                raiz = parser.parse()
+                self.tabs.syntactic_analysis_tab.set_tree(raiz)
         else:
             print("No file to run")
 
