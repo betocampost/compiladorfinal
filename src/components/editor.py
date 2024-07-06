@@ -1,7 +1,60 @@
-"""Editor component for the IDE"""
-
 import tkinter as tk
 from tkinter import scrolledtext
+
+
+class CustomText(tk.Text):
+    def __init__(self, *args, **kwargs):
+        tk.Text.__init__(self, *args, **kwargs)
+
+        # create a proxy for the underlying widget
+        self._orig = self._w + "_orig"
+        self.tk.call("rename", self._w, self._orig)
+        self.tk.createcommand(self._w, self._proxy)
+
+    def _proxy(self, *args):
+        # let the actual widget perform the requested action
+        cmd = (self._orig,) + args
+        result = self.tk.call(cmd)
+
+        # generate an event if something was added or deleted,
+        # or the cursor position changed
+        if (
+            args[0] in ("insert", "replace", "delete")
+            or args[0:3] == ("mark", "set", "insert")
+            or args[0:2] == ("xview", "moveto")
+            or args[0:2] == ("xview", "scroll")
+            or args[0:2] == ("yview", "moveto")
+            or args[0:2] == ("yview", "scroll")
+        ):
+            self.event_generate("<<Change>>", when="tail")
+
+        # return what the actual widget returned
+        return result
+
+
+class LineNumber(tk.Canvas):
+    """Line number for the editor"""
+
+    def __init__(self, root, text_widget):
+        super().__init__(root, width=30, bg="lightgrey")
+        self.text_widget = text_widget
+
+    def attach(self, text_widget):
+        self.text_widget = text_widget
+
+    def redraw(self, *args):
+        """Redraw the line numbers"""
+        self.delete("all")
+
+        i = self.text_widget.index("@0,0")
+        while True:
+            dline = self.text_widget.dlineinfo(i)
+            if dline is None:
+                break
+            y = dline[1]
+            linenum = str(i).split(".", maxsplit=1)[0]
+            self.create_text(2, y, anchor="nw", text=linenum)
+            i = self.text_widget.index(f"{i}+1line")
 
 
 class Editor:
@@ -13,19 +66,29 @@ class Editor:
             relx=0, rely=0, relwidth=0.6, relheight=0.7
         )  # Adjust the size and placement
 
-        self.text_editor = scrolledtext.ScrolledText(self.frame, wrap=tk.WORD)
-        self.text_editor.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-
+        self.text_editor = CustomText(self.frame, wrap=tk.WORD)
+        self.vsb = tk.Scrollbar(
+            self.frame, orient="vertical", command=self.text_editor.yview
+        )
+        self.text_editor.configure(yscrollcommand=self.vsb.set)
         self.line_number = LineNumber(self.frame, self.text_editor)
-        self.line_number.pack(side=tk.LEFT, fill=tk.Y)
+        self.line_number.attach(self.text_editor)
 
-        self.text_editor.bind("<KeyRelease>", self.on_key_release)
-        self.text_editor.bind("<ButtonRelease-1>", self.on_button_release)
-        self.text_editor.bind("<Configure>", self.on_configure)
+        self.vsb.place(relx=0.95, rely=0, relheight=0.95)
+        self.line_number.place(relx=0, rely=0, relheight=0.95)
+        self.text_editor.place(relx=0.05, rely=0, relwidth=0.9, relheight=0.95)
 
-        self.text_editor.vbar.bind("<B1-Motion>", self.on_scroll)
-        self.text_editor.vbar.bind("<ButtonRelease-1>", self.on_scroll)
-        self.text_editor.bind("<MouseWheel>", self.on_scroll)
+        self.text_editor.bind("<<Change>>", self.on_change)
+        self.text_editor.bind("<Configure>", self.on_change)
+
+        self.cursor_position_label = tk.Label(
+            self.frame, text="Line: 1 Col: 1", anchor=tk.W
+        )
+        self.cursor_position_label.place(relx=0, rely=0.95, relwidth=1, relheight=0.05)
+
+        self.text_editor.bind("<Configure>", self.on_change)
+        self.text_editor.bind("<ButtonRelease-1>", self.update_cursor_position)
+        self.text_editor.bind("<KeyRelease>", self.update_cursor_position)
 
     def clear(self):
         """Clear the editor"""
@@ -42,43 +105,20 @@ class Editor:
         self.text_editor.insert(tk.END, content)
         self.line_number.redraw()
 
-    def on_key_release(self, event):
-        """Update line numbers on key release"""
+    def on_change(self, event):
+        """Update line numbers on change"""
         self.line_number.redraw()
 
-    def on_button_release(self, event):
-        """Update line numbers on button release"""
-        self.line_number.redraw()
-
-    def on_configure(self, event):
-        """Update line numbers on configure event"""
-        self.line_number.redraw()
-
-    def on_scroll(self, event):
-        """Update line numbers on scroll"""
-        self.line_number.redraw()
-        return "break"
+    def update_cursor_position(self, event=None):
+        """Update cursor position label"""
+        cursor_position = self.text_editor.index(tk.INSERT)
+        line, col = cursor_position.split(".")
+        col = int(col) + 1
+        col = str(col)
+        self.cursor_position_label.config(text=f"Line: {line} Col: {col}")
 
 
-class LineNumber(tk.Canvas):
-    """Line number for the editor"""
-
-    def __init__(self, root, text_widget):
-        super().__init__(root, width=30, bg="lightgrey")
-        self.text_widget = text_widget
-        self.text_widget.bind("<KeyRelease>", self.redraw)
-        self.text_widget.bind("<ButtonRelease-1>", self.redraw)
-        self.text_widget.bind("<Configure>", self.redraw)
-
-    def redraw(self, event=None):
-        """Redraw the line numbers"""
-        self.delete("all")
-        i = self.text_widget.index("@0,0")
-        while True:
-            dline = self.text_widget.dlineinfo(i)
-            if dline is None:
-                break
-            y = dline[1]
-            line_number = str(i).split(".", maxsplit=1)[0]
-            self.create_text(2, y, anchor="nw", text=line_number)
-            i = self.text_widget.index(f"{i}+1line")
+if __name__ == "__main__":
+    root = tk.Tk()
+    editor = Editor(root)
+    root.mainloop()
