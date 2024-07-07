@@ -408,7 +408,7 @@ class Parser:
     def render_tree(self, ast):
         tree_str = ""
         for pre, _, node in RenderTree(ast):
-            tree_str += "%s%s\n" % (pre, node)
+            tree_str += f"{pre}{node}\n"
         return tree_str
 
 
