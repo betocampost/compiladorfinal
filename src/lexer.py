@@ -100,7 +100,7 @@ def lexer(file: Path):
                         resto_cadena = linea[i + 1 :]
                         while True:
                             for c in resto_cadena:
-                                if re.match(identificador, c):
+                                if re.match(identificador, (identifier + c)):
                                     identifier += c
                                     omitir += 1
                                 else:
@@ -151,6 +151,7 @@ def lexer(file: Path):
                                         "REAL",
                                         "ENTERO NEGATIVO",
                                         "REAL NEGATIVO",
+                                        "IDENTIFICADOR",
                                     )
                                 ):
                                     tokens.pop()
@@ -177,6 +178,7 @@ def lexer(file: Path):
                                         "REAL",
                                         "ENTERO NEGATIVO",
                                         "REAL NEGATIVO",
+                                        "IDENTIFICADOR",
                                     )
                                 ):
                                     tokens.pop()

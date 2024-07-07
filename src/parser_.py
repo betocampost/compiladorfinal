@@ -65,7 +65,7 @@ class Parser:
         self.match("MAIN")
         self.match("LLLAVE")
         declaraciones = self.lista_declaraciones()
-        sentencias = self.sentence_list()
+        sentencias = self.lista_sentencias()
         self.match("RLLAVE")
         return Node(
             name="Programa", valor=token.valor, children=declaraciones + sentencias
@@ -144,11 +144,11 @@ class Parser:
             self.match("IDENTIFICADOR")
         return [Node(name="Identificador", valor=id) for id in ids]
 
-    def sentence_list(self):
-        statements = []
+    def lista_sentencias(self):
+        sentencias = []
         while self.token_actual and self.token_actual.tipo != "RLLAVE":
-            statements.append(self.sentencia())
-        return statements
+            sentencias.append(self.sentencia())
+        return sentencias
 
     def sentencia(self):
         if self.token_actual.tipo == "IF":
@@ -188,18 +188,38 @@ class Parser:
             self.match("OPERADOR_INCREMENTO")
             self.match("SEMICOLON")
             return Node(
-                name="Increment",
-                valor=operator_token.valor,
-                children=[Node(name="Identificador", valor=identifier_token)],
+                name="ASIGNACION",
+                valor="=",
+                children=[
+                    Node(name="Identificador", valor=identifier_token),
+                    Node(
+                        name="Incremento",
+                        valor="+",
+                        children=[
+                            Node(name="Identificador", valor=identifier_token),
+                            Node(name="Numero", valor="1"),
+                        ],
+                    ),
+                ],
             )
         elif self.token_actual.tipo == "OPERADOR_DECREMENTO":
             operator_token = self.token_actual
             self.match("OPERADOR_DECREMENTO")
             self.match("SEMICOLON")
             return Node(
-                name="Decremento",
-                valor=operator_token.valor,
-                children=[Node("Identificador", valor=identifier_token)],
+                name="ASIGNACION",
+                valor="=",
+                children=[
+                    Node(name="Identificador", valor=identifier_token),
+                    Node(
+                        name="Decremento",
+                        valor="-",
+                        children=[
+                            Node(name="Identificador", valor=identifier_token),
+                            Node(name="Numero", valor="1"),
+                        ],
+                    ),
+                ],
             )
         else:
             mensaje_error = f"Token inesperado {self.token_actual.tipo if self.token_actual else 'None'}, esperado en la línea {self.token_actual.linea if self.token_actual else 'None'}, posición {self.token_actual.col if self.token_actual else 'None'}"
@@ -233,13 +253,13 @@ class Parser:
         condition = self.expresion()
         self.match("RPAREN")
         self.match("LLLAVE")
-        true_branch = self.sentence_list()
+        true_branch = self.lista_sentencias()
         self.match("RLLAVE")
 
         if self.token_actual and self.token_actual.tipo == "ELSE":
             self.match("ELSE")
             self.match("LLLAVE")
-            false_branch = self.sentence_list()
+            false_branch = self.lista_sentencias()
             self.match("RLLAVE")
             return Node(
                 name="If",
@@ -266,14 +286,14 @@ class Parser:
         condicion = self.expresion()
         self.match("RPAREN")
         self.match("LLLAVE")
-        sentencias = self.sentence_list()
+        sentencias = self.lista_sentencias()
         self.match("RLLAVE")
         return Node(name="While", valor="while", children=[condicion] + sentencias)
 
     def sentencia_do_while(self):
         self.match("DO")
         self.match("LLLAVE")
-        sentencias = self.sentence_list()
+        sentencias = self.lista_sentencias()
         self.match("RLLAVE")
         self.match("WHILE")
         self.match("LPAREN")
@@ -283,11 +303,10 @@ class Parser:
         return Node(name="DoWhile", valor="do_while", children=sentencias + [condicion])
 
     def sentencia_cin(self):
-        identificador = self.token_actual.valor
         self.match("CIN")
-        self.match("IDENTIFICADOR")
+        nodos_identificadores = self.identificador()
         self.match("SEMICOLON")
-        return Node(name="Input", valor=identificador)
+        return Node(name="Input", valor="cin", children=nodos_identificadores)
 
     def sentencia_cout(self):
         identificador = self.token_actual.valor

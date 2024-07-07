@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import scrolledtext
 
 
 class CustomText(tk.Text):
@@ -113,12 +112,5 @@ class Editor:
         """Update cursor position label"""
         cursor_position = self.text_editor.index(tk.INSERT)
         line, col = cursor_position.split(".")
-        col = int(col) + 1
-        col = str(col)
+        col = str(int(col) + 1)
         self.cursor_position_label.config(text=f"Line: {line} Col: {col}")
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    editor = Editor(root)
-    root.mainloop()
