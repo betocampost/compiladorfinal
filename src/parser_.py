@@ -184,7 +184,6 @@ class Parser:
                 children=[Node("Identificador", valor=identifier_token), expresion],
             )
         elif self.token_actual.tipo == "OPERADOR_INCREMENTO":
-            operator_token = self.token_actual
             self.match("OPERADOR_INCREMENTO")
             self.match("SEMICOLON")
             return Node(
@@ -203,7 +202,6 @@ class Parser:
                 ],
             )
         elif self.token_actual.tipo == "OPERADOR_DECREMENTO":
-            operator_token = self.token_actual
             self.match("OPERADOR_DECREMENTO")
             self.match("SEMICOLON")
             return Node(
