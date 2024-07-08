@@ -1,0 +1,38 @@
+[editor]
+bg = "#282923"
+fg = "#f8f8f2"
+select_bg = "#48473d"
+select_fg = "#f8f8f2"
+inactive_select_bg = "#48473d"
+caret = "#f8f8f2"
+caret_width = 1
+border_width = 0
+focus_border_width = 0
+
+[general]
+comment = "#888888"
+error = "#FF0000"
+escape = "#AAAAAA"
+keyword = "#ff08a8"
+punctuation = "#d9ba0d"
+
+[name]
+variable = "#67D8EF"
+
+[operator]
+symbol = "#AC80FF"
+word = "#AC80FF"
+
+[number]
+binary = "#a6e22c"
+float = "#a6e22c"
+hex = "#a6e22c"
+integer = "#a6e22c"
+long = "#a6e22c"
+octal = "#a6e22c"
+
+[comment]
+hashbang = "#74705D"
+multiline = "#74705D"
+single = "#74705D"
+special = "#74705D"

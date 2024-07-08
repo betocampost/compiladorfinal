@@ -428,11 +428,11 @@ if __name__ == "__main__":
             tkns, errs = lexer(file_path)
 
             parser = Parser(tkns)
-            ast = parser.parse()
+            root = parser.parse()
 
             # Render the tree as a string
-            tree_str = parser.render_tree(ast)
+            tree = parser.render_tree(root)
 
-            print(tree_str)
+            print(tree)
 
             print(parser.errores)

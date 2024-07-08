@@ -1,59 +1,68 @@
 import tkinter as tk
+from chlorophyll import CodeView
+from pygments.lexer import RegexLexer, words
+from pygments.token import (
+    Text,
+    Comment,
+    Punctuation,
+    Keyword,
+    Operator,
+    Number,
+    Name,
+    Error,
+)
+import toml
 
 
-class CustomText(tk.Text):
-    def __init__(self, *args, **kwargs):
-        tk.Text.__init__(self, *args, **kwargs)
+class CustomLexer(RegexLexer):
+    tokens = {
+        "root": [
+            (r"\s+", Text),  # whitespace
+            (r"//.*?\n", Comment.Singleline),  # single-line comments
+            (
+                r"/\*",
+                Comment.Multiline,
+                "comment",
+            ),  # start of multiline comments
+            (r"[(){};,]", Punctuation),  # symbols
+            (
+                words(
+                    (
+                        "if",
+                        "else",
+                        "do",
+                        "while",
+                        "switch",
+                        "case",
+                        "double",
+                        "main",
+                        "cin",
+                        "cout",
+                        "int",
+                        "float",
+                    ),
+                    suffix=r"\b",
+                ),
+                Keyword,
+            ),  # keywords
+            (r"[+-/*%^]|\+\+|--|=|==|<=|>=|!=|<|>|and|or", Operator),  # operators
+            (r"\b\d+(\.\d+)?\b", Number.Float),  # float numbers
+            (r"\b\d+\b", Number.Integer),  # integers
+            (r"[a-zA-Z_][a-zA-Z0-9_]*", Name.Variable),  # identifiers
+            (r"[^\s]+", Error),  # error handling for invalid characters
+        ],
+        "comment": [
+            (r"[^*/]+", Comment.Multiline),
+            (r"/\*", Comment.Multiline, "#push"),
+            (r"\*/", Comment.Multiline, "#pop"),
+            (r"[*/]", Comment.Multiline),
+        ],
+    }
 
-        # create a proxy for the underlying widget
-        self._orig = self._w + "_orig"
-        self.tk.call("rename", self._w, self._orig)
-        self.tk.createcommand(self._w, self._proxy)
-
-    def _proxy(self, *args):
-        # let the actual widget perform the requested action
-        cmd = (self._orig,) + args
-        result = self.tk.call(cmd)
-
-        # generate an event if something was added or deleted,
-        # or the cursor position changed
-        if (
-            args[0] in ("insert", "replace", "delete")
-            or args[0:3] == ("mark", "set", "insert")
-            or args[0:2] == ("xview", "moveto")
-            or args[0:2] == ("xview", "scroll")
-            or args[0:2] == ("yview", "moveto")
-            or args[0:2] == ("yview", "scroll")
-        ):
-            self.event_generate("<<Change>>", when="tail")
-
-        # return what the actual widget returned
-        return result
-
-
-class LineNumber(tk.Canvas):
-    """Line number for the editor"""
-
-    def __init__(self, root, text_widget):
-        super().__init__(root, width=30, bg="lightgrey")
-        self.text_widget = text_widget
-
-    def attach(self, text_widget):
-        self.text_widget = text_widget
-
-    def redraw(self, *args):
-        """Redraw the line numbers"""
-        self.delete("all")
-
-        i = self.text_widget.index("@0,0")
-        while True:
-            dline = self.text_widget.dlineinfo(i)
-            if dline is None:
-                break
-            y = dline[1]
-            linenum = str(i).split(".", maxsplit=1)[0]
-            self.create_text(2, y, anchor="nw", text=linenum)
-            i = self.text_widget.index(f"{i}+1line")
+    def get_tokens_unprocessed(self, text, stack=("root",)):
+        for index, token, value in RegexLexer.get_tokens_unprocessed(self, text, stack):
+            print(f"Token: {token}, Value: {value}, Stack: {stack}")
+            yield index, token, value
 
 
 class Editor:
@@ -65,34 +74,26 @@ class Editor:
             relx=0, rely=0, relwidth=0.6, relheight=0.7
         )  # Adjust the size and placement
 
-        self.text_editor = CustomText(self.frame, wrap=tk.WORD)
-        self.vsb = tk.Scrollbar(
-            self.frame, orient="vertical", command=self.text_editor.yview
+        # Load custom color scheme from TOML file
+        custom_color_scheme = toml.load("custom_color_scheme.toml")
+
+        # Create CodeView with custom lexer and color scheme
+        self.text_editor = CodeView(
+            self.frame, lexer=CustomLexer(), color_scheme=custom_color_scheme
         )
-        self.text_editor.configure(yscrollcommand=self.vsb.set)
-        self.line_number = LineNumber(self.frame, self.text_editor)
-        self.line_number.attach(self.text_editor)
-
-        self.vsb.place(relx=0.95, rely=0, relheight=0.95)
-        self.line_number.place(relx=0, rely=0, relheight=0.95)
-        self.text_editor.place(relx=0.05, rely=0, relwidth=0.9, relheight=0.95)
-
-        self.text_editor.bind("<<Change>>", self.on_change)
-        self.text_editor.bind("<Configure>", self.on_change)
+        self.text_editor.pack(expand=1, fill="both")
 
         self.cursor_position_label = tk.Label(
             self.frame, text="Line: 1 Col: 1", anchor=tk.W
         )
         self.cursor_position_label.place(relx=0, rely=0.95, relwidth=1, relheight=0.05)
 
-        self.text_editor.bind("<Configure>", self.on_change)
         self.text_editor.bind("<ButtonRelease-1>", self.update_cursor_position)
         self.text_editor.bind("<KeyRelease>", self.update_cursor_position)
 
     def clear(self):
         """Clear the editor"""
         self.text_editor.delete(1.0, tk.END)
-        self.line_number.redraw()
 
     def get_content(self):
         """Get the content of the editor"""
@@ -102,11 +103,6 @@ class Editor:
         """Set the content of the editor"""
         self.clear()
         self.text_editor.insert(tk.END, content)
-        self.line_number.redraw()
-
-    def on_change(self, event):
-        """Update line numbers on change"""
-        self.line_number.redraw()
 
     def update_cursor_position(self, event=None):
         """Update cursor position label"""
@@ -114,3 +110,9 @@ class Editor:
         line, col = cursor_position.split(".")
         col = str(int(col) + 1)
         self.cursor_position_label.config(text=f"Line: {line} Col: {col}")
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    editor = Editor(root)
+    root.mainloop()
