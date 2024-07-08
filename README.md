@@ -1,4 +1,11 @@
 Para instalar las dependencias primero estar en la carpeta del proyecto y ejecutar el siguiente comando:
+Antes que nada instalar la primera opcion del siguiente link
+https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/tag/2022-01-04
+
+1.-ejecutarla y despues instalarla
+2.-reiniciar el visual studio code
+3.- ejecutar el programa main.py
+
 
 En Windows:
 
