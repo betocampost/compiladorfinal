@@ -1,0 +1,5 @@
+anytree==2.12.1
+cairosvg==2.7.1
+chlorophyll==0.4.2
+pygments==2.18.0
+pillow==10.4.0
