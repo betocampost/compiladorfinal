@@ -61,7 +61,7 @@ class CustomLexer(RegexLexer):
 
     def get_tokens_unprocessed(self, text, stack=("root",)):
         for index, token, value in RegexLexer.get_tokens_unprocessed(self, text, stack):
-            print(f"Token: {token}, Value: {value}, Stack: {stack}")
+            # print(f"Token: {token}, Value: {value}, Stack: {stack}")
             yield index, token, value
 
 
